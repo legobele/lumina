@@ -12,6 +12,9 @@ This was fully made using Kimi K2.5 Thinking via Moonshot AI's free usage tier (
 - Can add personal details (name, pronouns, etc.)
 - API Key support (you can add your LM Studio API key)
 
+# Issues
+- defaults to my personal tailnet's ip. this is intentional.
+
 # Contributors (I think this is how this is handled?)
 idgaf tbh anyone can contribute ig
 im prob never gon actually check the PRs on this
