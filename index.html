@@ -1067,7 +1067,6 @@
             opacity: 1;
         }
 
-        /* Animation for streaming content */
         @keyframes fadeInContent {
             from { opacity: 0; transform: translateY(2px); }
             to { opacity: 1; transform: translateY(0); }
@@ -1075,25 +1074,6 @@
 
         .message-content {
             animation: fadeInContent 0.15s ease;
-        }
-
-        /* Stream event styles */
-        .stream-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 11px;
-            color: var(--success);
-            margin-left: 8px;
-        }
-
-        .stream-status::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: var(--success);
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
         }
 </style>
 <base target="_blank">
@@ -1483,7 +1463,6 @@
     <div class="notification" id="notification"></div>
 
     <script>
-\n
 const appState = {
     currentView: 'chat',
     currentChatId: null,
@@ -1598,7 +1577,6 @@ const app = {
             }
         });
 
-        // Global click handler for think block toggles
         document.addEventListener('click', (e) => {
             if (e.target.closest('.think-header')) {
                 const block = e.target.closest('.think-block');
@@ -1615,7 +1593,6 @@ const app = {
             try {
                 const parsed = JSON.parse(saved);
                 Object.assign(appState, parsed);
-                // Restore Map from array
                 if (parsed.hfModelData) {
                     appState.hfModelData = new Map(parsed.hfModelData);
                 }
@@ -1724,7 +1701,8 @@ const app = {
         if (d.personal) parts.push(`Personal context: ${d.personal}`);
         if (d.extra) parts.push(`Additional details: ${d.extra}`);
 
-        return parts.join('\n');
+        return parts.join("
+");
     },
 
     compilePreferences() {
@@ -1734,7 +1712,8 @@ const app = {
         if (d.responseStyle) parts.push(`Style: ${d.responseStyle}`);
         if (d.responseFormat) parts.push(`Format: ${d.responseFormat}`);
 
-        return parts.join('\n');
+        return parts.join("
+");
     },
 
     createNewChat() {
@@ -2025,7 +2004,7 @@ const app = {
         if (hfStatus) hfStatus.style.display = 'none';
 
         if (fetchedCount > 0) {
-            this.showNotification(`🤗 Fetched ${fetchedCount} model cards from HuggingFace`, 'hf');
+            this.showNotification(`Fetched ${fetchedCount} model cards from HuggingFace`, 'hf');
             this.saveToStorage();
             this.renderModelList();
         }
@@ -2423,7 +2402,6 @@ const app = {
             return;
         }
 
-        // Cancel any ongoing generation
         if (appState.abortController) {
             appState.abortController.abort();
         }
@@ -2444,7 +2422,6 @@ const app = {
 
         const messages = this.buildContext(assistantId, options);
 
-        // Initialize streaming state
         let streamState = {
             fullContent: '',
             thinkingContent: '',
@@ -2496,7 +2473,6 @@ const app = {
 
                 buffer += decoder.decode(value, { stream: true });
 
-                // Process complete SSE events
                 const events = this.parseSSEEvents(buffer);
                 buffer = events.remainder;
 
@@ -2505,21 +2481,20 @@ const app = {
                 }
             }
 
-            // Process any remaining data
             if (buffer.trim()) {
-                const events = this.parseSSEEvents(buffer + '\n\n');
+                const events = this.parseSSEEvents(buffer + '
+
+');
                 for (const event of events.parsed) {
                     streamState = this.handleStreamEvent(event, assistantId, streamState);
                 }
             }
 
-            // Finalize think block if still open
             if (streamState.inThinkBlock && streamState.thinkStartTime) {
                 const thinkTime = ((Date.now() - streamState.thinkStartTime) / 1000).toFixed(1);
                 appState.messages[assistantId].metadata.thinkingTime = thinkTime + 's';
             }
 
-            // Process final content for tool calls
             await this.processToolCalls(assistantId, streamState.fullContent);
 
             if (appState.settings.recallChats) {
@@ -2543,7 +2518,8 @@ const app = {
 
     parseSSEEvents(buffer) {
         const events = [];
-        const lines = buffer.split('\n');
+        const lines = buffer.split('
+');
         let currentEvent = { type: null, data: '' };
         let lineIndex = 0;
 
@@ -2555,30 +2531,26 @@ const app = {
             } else if (line.startsWith('data: ')) {
                 currentEvent.data += line.slice(6);
             } else if (line.trim() === '') {
-                // Empty line indicates end of event
                 if (currentEvent.type || currentEvent.data) {
                     events.push({ ...currentEvent });
                     currentEvent = { type: null, data: '' };
                 }
             } else if (line.trim() !== '') {
-                // Continuation of data (multiline JSON)
-                currentEvent.data += '\n' + line;
+                currentEvent.data += '
+' + line;
             }
             lineIndex = i;
         }
 
-        // Return remaining buffer
-        const remainder = lines.slice(lineIndex + 1).join('\n');
+        const remainder = lines.slice(lineIndex + 1).join('
+');
 
-        // Parse JSON data
         const parsed = events.map(e => {
             try {
                 if (e.data && e.data !== '[DONE]') {
                     e.parsedData = JSON.parse(e.data);
                 }
-            } catch (err) {
-                // Keep raw data if JSON parse fails
-            }
+            } catch (err) {}
             return e;
         });
 
@@ -2589,11 +2561,9 @@ const app = {
         const msg = appState.messages[messageId];
         if (!msg) return state;
 
-        // Handle OpenAI-style stream (content in choices[0].delta)
         if (event.parsedData) {
             const data = event.parsedData;
 
-            // Check for reasoning_content (DeepSeek/QwQ style)
             const reasoning = data.choices?.[0]?.delta?.reasoning_content;
             if (reasoning) {
                 if (!state.reasoningStartTime) {
@@ -2606,7 +2576,6 @@ const app = {
                 this.updateMessageContent(messageId, state.fullContent, state.thinkingContent, msg.metadata.thinkingTime);
             }
 
-            // Regular content
             const content = data.choices?.[0]?.delta?.content;
             if (content) {
                 state = this.processContentWithThinkTags(content, messageId, state);
@@ -2620,7 +2589,6 @@ const app = {
         const msg = appState.messages[messageId];
         let processed = content;
 
-        // Handle <think> tags
         if (content.includes('<think>')) {
             state.inThinkBlock = true;
             state.thinkStartTime = Date.now();
@@ -2638,7 +2606,6 @@ const app = {
             state.thinkingContent += thinkContent;
             state.fullContent += afterThink;
 
-            // Calculate thinking time
             if (state.thinkStartTime) {
                 const thinkTime = ((Date.now() - state.thinkStartTime) / 1000).toFixed(1);
                 msg.metadata.thinkingContent = state.thinkingContent;
@@ -2649,7 +2616,6 @@ const app = {
             state.thinkStartTime = null;
             processed = afterThink;
         } else if (state.inThinkBlock) {
-            // Inside think block
             state.thinkingContent += content;
             msg.metadata.thinkingContent = state.thinkingContent;
             if (state.thinkStartTime) {
@@ -2658,7 +2624,6 @@ const app = {
             }
             processed = '';
         } else {
-            // Normal content
             state.fullContent += content;
         }
 
@@ -2674,7 +2639,7 @@ const app = {
             appState.abortController = null;
         }
     },
-\n
+
     buildContext(messageId, options = {}) {
         const messages = [];
 
@@ -2682,38 +2647,76 @@ const app = {
         const systemBlocks = [];
 
         if (appState.settings.recallMemory && appState.memories.length > 0) {
-            systemBlocks.push(`<userMemory>\n${appState.memories.join('\n')}\n</userMemory>`);
+            systemBlocks.push(`<userMemory>
+${appState.memories.join('
+')}
+</userMemory>`);
         }
 
         const userDetails = this.compileUserDetails();
         if (userDetails) {
-            systemBlocks.push(`<userDetails>\n${userDetails}\n</userDetails>`);
+            systemBlocks.push(`<userDetails>
+${userDetails}
+</userDetails>`);
         }
 
         const preferences = this.compilePreferences();
         if (preferences) {
-            systemBlocks.push(`<userPreferences>\n${preferences}\n</userPreferences>`);
+            systemBlocks.push(`<userPreferences>
+${preferences}
+</userPreferences>`);
         }
 
         if (appState.settings.recallChats) {
             const summaries = this.getRelevantSummaries(messageId);
             if (summaries.length > 0) {
-                systemBlocks.push(`<prevChats>\n${summaries.join('\n\n')}\n</prevChats>`);
+                systemBlocks.push(`<prevChats>
+${summaries.join('
+
+')}
+</prevChats>`);
             }
         }
 
         if (systemBlocks.length > 0) {
-            systemContent = `<system>\nYou are Lumina, a helpful AI assistant.\n\n${systemBlocks.join('\n\n')}\n</system>`;
+            systemContent = `<system>
+You are Lumina, a helpful AI assistant.
+
+${systemBlocks.join('
+
+')}
+</system>`;
         } else {
-            systemContent = '<system>\nYou are Lumina, a helpful AI assistant.\n</system>';
+            systemContent = '<system>
+You are Lumina, a helpful AI assistant.
+</system>';
         }
 
-        systemContent += `\n\n<tools>\nYou have access to tools to personalize the experience:\n\n1. manage_memory - Store/recall facts about the user\n2. update_user_details - Update user profile or preferences\n\nFormat: <tool_call>{"name": "tool_name", "arguments": {...}}</tool_call>\n\nFields: name, nickname, pronouns, work, personal, extra, responseStyle, responseFormat\n</tools>`;
+        systemContent += `
+
+<tools>
+You have access to tools to personalize the experience:
+
+1. manage_memory - Store/recall facts about the user
+2. update_user_details - Update user profile or preferences
+
+Format: <tool_call>{"name": "tool_name", "arguments": {...}}</tool_call>
+
+Fields: name, nickname, pronouns, work, personal, extra, responseStyle, responseFormat
+</tools>`;
 
         if (options.mode === 'shorter') {
-            systemContent += '\n\n<instructions>\nProvide a concise, brief response.\n</instructions>';
+            systemContent += '
+
+<instructions>
+Provide a concise, brief response.
+</instructions>';
         } else if (options.mode === 'longer') {
-            systemContent += '\n\n<instructions>\nProvide a detailed, comprehensive response with examples and depth.\n</instructions>';
+            systemContent += '
+
+<instructions>
+Provide a detailed, comprehensive response with examples and depth.
+</instructions>';
         }
 
         messages.push({ role: 'system', content: systemContent });
@@ -2787,7 +2790,9 @@ const app = {
 
         if (toolResults.length > 0) {
             const cleanContent = content.replace(/<tool_call>[\s\S]*?<\/tool_call>/g, '').trim();
-            appState.messages[messageId].content = cleanContent + '\n\n[Settings updated by AI: ' + toolResults.join(', ') + ']';
+            appState.messages[messageId].content = cleanContent + '
+
+[Settings updated by AI: ' + toolResults.join(', ') + ']';
             appState.messages[messageId].metadata.toolUsed = true;
             this.saveCurrentChat();
             this.render();
@@ -2946,12 +2951,10 @@ const app = {
             </div>
         `;
 
-        // Handle thinking content (from API reasoning or <think> tags)
         if (node.metadata?.thinkingContent || node.content?.includes('<think>')) {
             html += this.renderThinkBlock(node);
         }
 
-        // Format main content (removing think tags if they were processed)
         let mainContent = node.content || '';
         if (mainContent.includes('<think>')) {
             mainContent = mainContent.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
@@ -3004,11 +3007,9 @@ const app = {
     updateMessageContent(id, content, thinking, time) {
         const el = document.getElementById(`msg-${id}`);
         if (el) {
-            // Update or add think block
             let thinkBlock = el.querySelector('.think-block');
             if (thinking) {
                 if (!thinkBlock) {
-                    // Create new think block
                     const header = el.querySelector('.message-header');
                     const thinkHTML = `
                         <div class="think-block ${appState.settings.autoCollapseThink ? 'collapsed' : ''}">
@@ -3029,7 +3030,6 @@ const app = {
                     `;
                     header.insertAdjacentHTML('afterend', thinkHTML);
                 } else {
-                    // Update existing
                     const pre = thinkBlock.querySelector('pre');
                     if (pre) pre.textContent = thinking;
                     const timeEl = thinkBlock.querySelector('.think-time');
@@ -3037,7 +3037,6 @@ const app = {
                 }
             }
 
-            // Update main content
             const contentEl = el.querySelector('.message-content');
             if (contentEl) {
                 let displayContent = content;
@@ -3052,11 +3051,11 @@ const app = {
     formatContent(content) {
         if (!content) return '';
 
-        // Remove any remaining think tags that weren't processed
         content = content.replace(/<\?think>/g, '');
 
         return this.escapeHtml(content)
-            .replace(/\n/g, '<br>')
+            .replace(/
+/g, '<br>')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
             .replace(/`(.*?)`/g, '<code style="background: var(--bg-tertiary); padding: 2px 4px; border-radius: 4px;">$1</code>');
@@ -3317,4 +3316,7 @@ if ('serviceWorker' in navigator) {
         self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => new Response('Offline'))));
     `)).catch(() => {});
 }
-\n</script>\n</body>\n</html>
+
+</script>
+</body>
+</html>
