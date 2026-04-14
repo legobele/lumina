@@ -927,154 +927,6 @@
             color: var(--text-secondary);
             margin-left: 4px;
         }
-    
-        /* Think Block Styles */
-        .think-block {
-            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-            border: 1px solid var(--border);
-            border-left: 3px solid var(--success);
-            border-radius: 8px;
-            margin: 12px 0;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .think-block.collapsed .think-content {
-            max-height: 0;
-            opacity: 0;
-            padding: 0 16px;
-        }
-
-        .think-block.collapsed .toggle-icon {
-            transform: rotate(-90deg);
-        }
-
-        .think-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            cursor: pointer;
-            background: rgba(0, 255, 136, 0.05);
-            transition: background 0.2s;
-        }
-
-        .think-header:hover {
-            background: rgba(0, 255, 136, 0.1);
-        }
-
-        .think-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--success);
-        }
-
-        .think-icon {
-            font-size: 14px;
-        }
-
-        .think-time {
-            font-size: 11px;
-            color: var(--text-secondary);
-            background: var(--bg-tertiary);
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-weight: 500;
-        }
-
-        .think-toggle {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            padding: 4px;
-            font-size: 12px;
-            transition: transform 0.2s;
-        }
-
-        .toggle-icon {
-            display: inline-block;
-            transition: transform 0.3s ease;
-        }
-
-        .think-content {
-            max-height: 500px;
-            overflow-y: auto;
-            transition: all 0.3s ease;
-            padding: 12px 16px;
-        }
-
-        .think-content pre {
-            margin: 0;
-            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-            font-size: 13px;
-            line-height: 1.6;
-            color: var(--text-secondary);
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-
-        /* Enhanced Typing Indicator */
-        .typing {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 0;
-            margin-bottom: 20px;
-        }
-
-        .typing-indicator {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: var(--text-secondary);
-            font-size: 13px;
-        }
-
-        .typing-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--text-secondary);
-            border-radius: 50%;
-            animation: typing 1.4s infinite;
-        }
-
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes typing {
-            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-            30% { transform: translateY(-10px); opacity: 1; }
-        }
-
-        .stop-btn {
-            background: var(--error);
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 16px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            opacity: 0.8;
-            transition: opacity 0.2s;
-        }
-
-        .stop-btn:hover {
-            opacity: 1;
-        }
-
-        @keyframes fadeInContent {
-            from { opacity: 0; transform: translateY(2px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message-content {
-            animation: fadeInContent 0.15s ease;
-        }
 
         .regenerate-option {
             padding: 16px;
@@ -1101,7 +953,7 @@
             border-radius: 12px;
             margin-left: 8px;
         }
-</style>
+    </style>
 <base target="_blank">
 </head>
 <body>
@@ -1226,19 +1078,6 @@
                     </div>
                     <div class="setting-desc" style="margin-top: 12px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px; font-size: 12px;">
                         <strong style="color: var(--hf-orange);">🤗 HuggingFace</strong> model card detection helps identify thinking capabilities that LM Studio might miss, such as NVIDIA Nemotron models.
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <div class="section-title">Display Preferences</div>
-                    <div class="setting-item">
-                        <div class="toggle">
-                            <div>
-                                <div class="setting-label">Auto-collapse Think Blocks</div>
-                                <div class="setting-desc">Collapse thinking blocks by default</div>
-                            </div>
-                            <div class="switch active" id="autoCollapseThinkToggle" onclick="app.toggleSetting('autoCollapseThink')"></div>
-                        </div>
                     </div>
                 </div>
 
@@ -1489,6 +1328,8 @@
     <div class="notification" id="notification"></div>
 
     <script>
+
+
 const appState = {
     currentView: 'chat',
     currentChatId: null,
@@ -1504,8 +1345,7 @@ const appState = {
         recallChats: true,
         recallMemory: true,
         hfFetch: true,
-        enhancedDetection: true,
-        autoCollapseThink: true
+        enhancedDetection: true
     },
     userDetails: {
         name: '',
@@ -1529,9 +1369,8 @@ const appState = {
     isGenerating: false,
     regeneratingMessageId: null,
     modelCapabilities: new Map(),
-    hfModelData: new Map(),
-    hfFetching: false,
-    abortController: null
+    hfModelData: new Map(), // Cache for HuggingFace model data
+    hfFetching: false
 };
 
 const TOOL_SCHEMA = {
@@ -1557,6 +1396,7 @@ const TOOL_SCHEMA = {
     }
 };
 
+// HuggingFace thinking detection keywords
 const THINKING_KEYWORDS = [
     'reasoning', 'thinking', 'chain of thought', 'CoT',
     'reasoning trace', 'reasoning capabilities', 'reasoning mode',
@@ -1602,15 +1442,6 @@ const app = {
                 dropdown.classList.remove('active');
             }
         });
-
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.think-header')) {
-                const block = e.target.closest('.think-block');
-                if (block) {
-                    block.classList.toggle('collapsed');
-                }
-            }
-        });
     },
 
     loadFromStorage() {
@@ -1619,9 +1450,6 @@ const app = {
             try {
                 const parsed = JSON.parse(saved);
                 Object.assign(appState, parsed);
-                if (parsed.hfModelData) {
-                    appState.hfModelData = new Map(parsed.hfModelData);
-                }
             } catch (e) {
                 console.error('Failed to parse saved state:', e);
             }
@@ -1647,12 +1475,18 @@ const app = {
             document.getElementById('apiKeyValue').value = appState.settings.apiKey || '';
         }
 
-        ['recallChats', 'recallMemory', 'hfFetch', 'enhancedDetection', 'autoCollapseThink'].forEach(key => {
-            if (!appState.settings[key]) {
-                const el = document.getElementById(key + 'Toggle');
-                if (el) el.classList.remove('active');
-            }
-        });
+        if (!appState.settings.recallChats) {
+            document.getElementById('recallChatsToggle').classList.remove('active');
+        }
+        if (!appState.settings.recallMemory) {
+            document.getElementById('recallMemoryToggle').classList.remove('active');
+        }
+        if (!appState.settings.hfFetch) {
+            document.getElementById('hfFetchToggle').classList.remove('active');
+        }
+        if (!appState.settings.enhancedDetection) {
+            document.getElementById('enhancedDetectionToggle').classList.remove('active');
+        }
 
         this.updateModelLabel();
         this.updateParamLabels();
@@ -1727,7 +1561,7 @@ const app = {
         if (d.personal) parts.push(`Personal context: ${d.personal}`);
         if (d.extra) parts.push(`Additional details: ${d.extra}`);
 
-        return parts.join("\n");
+        return parts.join('\n');
     },
 
     compilePreferences() {
@@ -1737,7 +1571,7 @@ const app = {
         if (d.responseStyle) parts.push(`Style: ${d.responseStyle}`);
         if (d.responseFormat) parts.push(`Format: ${d.responseFormat}`);
 
-        return parts.join("\n");
+        return parts.join('\n');
     },
 
     createNewChat() {
@@ -1910,6 +1744,7 @@ const app = {
         statusText.textContent = 'Connecting...';
 
         try {
+            // Use v0 API for richer data including capabilities
             const response = await fetch(`${appState.settings.lmStudioIp}/api/v0/models`, {
                 headers: appState.settings.useApiKey ? { 'Authorization': `Bearer ${appState.settings.apiKey}` } : {}
             });
@@ -1919,8 +1754,10 @@ const app = {
             const data = await response.json();
             appState.models = data.data || [];
 
+            // Detect capabilities from LM Studio API
             await this.detectCapabilities();
 
+            // If HF fetch enabled, also fetch HuggingFace data
             if (appState.settings.hfFetch && !appState.hfFetching) {
                 this.fetchHuggingFaceData();
             }
@@ -1950,9 +1787,11 @@ const app = {
             const id = model.id;
             const caps = model.capabilities || {};
 
+            // Check LM Studio's native reasoning capability
             const hasLMStudioReasoning = caps.reasoning && 
                 (caps.reasoning.allowed_options?.includes('on') || caps.reasoning.default === 'on');
 
+            // Check keywords as fallback
             const idLower = id.toLowerCase();
             const thinkingKeywords = ['thinking', 'reasoning', 'deepseek-r1', 'qwq', 'o1', 'o3', 'claude-3-7', 'nemotron'];
             const hasKeyword = thinkingKeywords.some(kw => idLower.includes(kw));
@@ -1980,14 +1819,20 @@ const app = {
         for (const model of appState.models) {
             const modelId = model.id;
 
+            // Skip if already cached recently (within 24 hours)
             const cached = appState.hfModelData.get(modelId);
             if (cached && (Date.now() - cached.timestamp < 24 * 60 * 60 * 1000)) {
                 continue;
             }
 
+            // Try to construct HuggingFace model ID from LM Studio model ID
+            // Common formats: publisher/model-name or just model-name
             let hfModelId = modelId;
+
+            // Remove quantization suffixes like @q4_k_m
             hfModelId = hfModelId.replace(/@.+$/, '');
 
+            // Try common HuggingFace endpoints
             const endpoints = [
                 `https://huggingface.co/${hfModelId}/raw/main/README.md`,
                 `https://huggingface.co/${hfModelId}/raw/main/model_card.md`,
@@ -2008,7 +1853,9 @@ const app = {
                         foundData = this.parseHFContent(content, endpoint);
                         break;
                     }
-                } catch (e) {}
+                } catch (e) {
+                    // Continue to next endpoint
+                }
             }
 
             if (foundData) {
@@ -2017,10 +1864,12 @@ const app = {
                     timestamp: Date.now()
                 });
 
+                // Update capabilities based on HF data
                 this.updateCapabilitiesFromHF(modelId, foundData);
                 fetchedCount++;
             }
 
+            // Small delay to be nice to HF servers
             await new Promise(r => setTimeout(r, 200));
         }
 
@@ -2028,9 +1877,9 @@ const app = {
         if (hfStatus) hfStatus.style.display = 'none';
 
         if (fetchedCount > 0) {
-            this.showNotification(`Fetched ${fetchedCount} model cards from HuggingFace`, 'hf');
+            this.showNotification(`🤗 Fetched ${fetchedCount} model cards from HuggingFace`, 'hf');
             this.saveToStorage();
-            this.renderModelList();
+            this.renderModelList(); // Refresh model list to show HF badges
         }
     },
 
@@ -2043,6 +1892,7 @@ const app = {
         };
 
         if (endpoint.includes('/api/models')) {
+            // JSON API response
             try {
                 const json = JSON.parse(content);
                 data.description = json.cardData?.description || json.description || '';
@@ -2051,6 +1901,7 @@ const app = {
                 return null;
             }
         } else {
+            // Markdown README
             data.description = content;
             data.isGGUF = content.toLowerCase().includes('gguf') || 
                          content.includes('.gguf') ||
@@ -2059,6 +1910,7 @@ const app = {
 
         const contentLower = data.description.toLowerCase();
 
+        // Check for thinking/reasoning keywords
         for (const keyword of THINKING_KEYWORDS) {
             if (contentLower.includes(keyword.toLowerCase())) {
                 data.hasThinking = true;
@@ -2066,6 +1918,7 @@ const app = {
             }
         }
 
+        // Special check for Nemotron-style reasoning descriptions
         if (contentLower.includes('reasoning trace') || 
             contentLower.includes('reasoning and non-reasoning') ||
             contentLower.includes('reasoning capabilities')) {
@@ -2089,6 +1942,7 @@ const app = {
     },
 
     verifyThinkingWithHF() {
+        // Manual trigger to check current model on HF
         if (!appState.currentModel) return;
 
         const btn = document.getElementById('hfVerifyBtn');
@@ -2233,6 +2087,7 @@ const app = {
             btn.classList.toggle('active', appState.currentParams.thinking);
             btn.classList.add('thinking-capable');
 
+            // Show source indicator
             if (source === 'HF') {
                 btn.innerHTML = '<span>🧠</span><span>Thinking 🤗</span>';
             } else {
@@ -2244,6 +2099,7 @@ const app = {
             btn.style.display = 'none';
             appState.currentParams.thinking = false;
 
+            // Show HF verify button if not verified and HF fetch enabled
             if (appState.settings.hfFetch && !appState.hfFetching) {
                 hfBtn.style.display = 'flex';
             } else {
@@ -2323,8 +2179,7 @@ const app = {
             'recallChats': 'recallChatsToggle',
             'recallMemory': 'recallMemoryToggle',
             'hfFetch': 'hfFetchToggle',
-            'enhancedDetection': 'enhancedDetectionToggle',
-            'autoCollapseThink': 'autoCollapseThinkToggle'
+            'enhancedDetection': 'enhancedDetectionToggle'
         };
 
         const toggleId = toggleMap[key];
@@ -2426,11 +2281,6 @@ const app = {
             return;
         }
 
-        if (appState.abortController) {
-            appState.abortController.abort();
-        }
-
-        appState.abortController = new AbortController();
         appState.isGenerating = true;
         this.render();
 
@@ -2446,15 +2296,6 @@ const app = {
 
         const messages = this.buildContext(assistantId, options);
 
-        let streamState = {
-            fullContent: '',
-            thinkingContent: '',
-            inThinkBlock: false,
-            thinkStartTime: null,
-            reasoningStartTime: null,
-            currentEvent: null
-        };
-
         try {
             const requestBody = {
                 model: options.model || appState.currentModel,
@@ -2465,6 +2306,7 @@ const app = {
             };
 
             if (useThinking && this.hasThinkingCapability(appState.currentModel)) {
+                // Try to use reasoning_effort if model supports it
                 const caps = appState.modelCapabilities.get(appState.currentModel);
                 if (caps.lmStudioReasoning) {
                     requestBody.reasoning_effort = 'high';
@@ -2475,11 +2317,9 @@ const app = {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'text/event-stream',
                     ...(appState.settings.useApiKey && { 'Authorization': `Bearer ${appState.settings.apiKey}` })
                 },
-                body: JSON.stringify(requestBody),
-                signal: appState.abortController.signal
+                body: JSON.stringify(requestBody)
             });
 
             if (!response.ok) {
@@ -2490,172 +2330,74 @@ const app = {
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let buffer = '';
+            let fullContent = '';
+            let thinkingContent = '';
+            let isThinking = false;
+            let thinkingStartTime = null;
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
 
                 buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
 
-                const events = this.parseSSEEvents(buffer);
-                buffer = events.remainder;
+                for (const line of lines) {
+                    if (line.trim() === '' || line.trim() === 'data: [DONE]') continue;
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+                            const delta = data.choices[0]?.delta?.content || '';
+                            const reasoning = data.choices[0]?.delta?.reasoning_content || '';
 
-                for (const event of events.parsed) {
-                    streamState = this.handleStreamEvent(event, assistantId, streamState);
+                            if (reasoning) {
+                                if (!thinkingStartTime) thinkingStartTime = Date.now();
+                                thinkingContent += reasoning;
+                            }
+
+                            if (delta.includes('<thinking>')) {
+                                isThinking = true;
+                                if (!thinkingStartTime) thinkingStartTime = Date.now();
+                                thinkingContent += delta.replace('<thinking>', '');
+                            } else if (delta.includes('</thinking>')) {
+                                isThinking = false;
+                                thinkingContent += delta.replace('</thinking>', '');
+                            } else if (isThinking) {
+                                thinkingContent += delta;
+                            } else {
+                                fullContent += delta;
+                            }
+
+                            appState.messages[assistantId].content = fullContent;
+                            if (thinkingContent) {
+                                appState.messages[assistantId].metadata.thinkingContent = thinkingContent;
+                                if (thinkingStartTime) {
+                                    const elapsed = ((Date.now() - thinkingStartTime) / 1000).toFixed(1);
+                                    appState.messages[assistantId].metadata.thinkingTime = `${elapsed}s`;
+                                }
+                            }
+                            this.updateMessageContent(assistantId, fullContent, thinkingContent, 
+                                appState.messages[assistantId].metadata.thinkingTime);
+                        } catch (e) {}
+                    }
                 }
             }
 
-            if (buffer.trim()) {
-                const events = this.parseSSEEvents(buffer + '\n');
-                for (const event of events.parsed) {
-                    streamState = this.handleStreamEvent(event, assistantId, streamState);
-                }
-            }
-
-            if (streamState.inThinkBlock && streamState.thinkStartTime) {
-                const thinkTime = ((Date.now() - streamState.thinkStartTime) / 1000).toFixed(1);
-                appState.messages[assistantId].metadata.thinkingTime = thinkTime + 's';
-            }
-
-            await this.processToolCalls(assistantId, streamState.fullContent);
+            await this.processToolCalls(assistantId, fullContent);
 
             if (appState.settings.recallChats) {
                 this.summarizeChat(assistantId);
             }
 
         } catch (error) {
-            if (error.name === 'AbortError') {
-                console.log('Generation aborted');
-            } else {
-                console.error('Generation error:', error);
-                appState.messages[assistantId].content = 'Error: ' + error.message;
-            }
+            console.error('Generation error:', error);
+            appState.messages[assistantId].content = 'Error: ' + error.message;
+            this.render();
         } finally {
             appState.isGenerating = false;
-            appState.abortController = null;
             this.saveCurrentChat();
             this.render();
-        }
-    },
-
-    parseSSEEvents(buffer) {
-        const events = [];
-        const lines = buffer.split('\n');
-        let currentEvent = { type: null, data: '' };
-        let lineIndex = 0;
-
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-
-            if (line.startsWith('event: ')) {
-                currentEvent.type = line.slice(7).trim();
-            } else if (line.startsWith('data: ')) {
-                currentEvent.data += line.slice(6);
-            } else if (line.trim() === '') {
-                if (currentEvent.type || currentEvent.data) {
-                    events.push({ ...currentEvent });
-                    currentEvent = { type: null, data: '' };
-                }
-            } else if (line.trim() !== '') {
-                currentEvent.data += '\n' + line;
-            }
-            lineIndex = i;
-        }
-
-        const remainder = lines.slice(lineIndex + 1).join('\n');
-
-        const parsed = events.map(e => {
-            try {
-                if (e.data && e.data !== '[DONE]') {
-                    e.parsedData = JSON.parse(e.data);
-                }
-            } catch (err) {}
-            return e;
-        });
-
-        return { parsed, remainder };
-    },
-
-    handleStreamEvent(event, messageId, state) {
-        const msg = appState.messages[messageId];
-        if (!msg) return state;
-
-        if (event.parsedData) {
-            const data = event.parsedData;
-
-            const reasoning = data.choices?.[0]?.delta?.reasoning_content;
-            if (reasoning) {
-                if (!state.reasoningStartTime) {
-                    state.reasoningStartTime = Date.now();
-                }
-                state.thinkingContent += reasoning;
-                msg.metadata.thinkingContent = state.thinkingContent;
-                const elapsed = ((Date.now() - state.reasoningStartTime) / 1000).toFixed(1);
-                msg.metadata.thinkingTime = elapsed + 's';
-                this.updateMessageContent(messageId, state.fullContent, state.thinkingContent, msg.metadata.thinkingTime);
-            }
-
-            const content = data.choices?.[0]?.delta?.content;
-            if (content) {
-                state = this.processContentWithThinkTags(content, messageId, state);
-            }
-        }
-
-        return state;
-    },
-
-    processContentWithThinkTags(content, messageId, state) {
-        const msg = appState.messages[messageId];
-        let processed = content;
-
-        if (content.includes('<think>')) {
-            state.inThinkBlock = true;
-            state.thinkStartTime = Date.now();
-            const beforeThink = content.split('<think>')[0];
-            const afterThinkStart = content.split('<think>')[1] || '';
-
-            state.fullContent += beforeThink;
-            state.thinkingContent += afterThinkStart;
-            processed = afterThinkStart;
-        } else if (content.includes('</think>')) {
-            const thinkEndParts = content.split('</think>');
-            const thinkContent = thinkEndParts[0];
-            const afterThink = thinkEndParts[1] || '';
-
-            state.thinkingContent += thinkContent;
-            state.fullContent += afterThink;
-
-            if (state.thinkStartTime) {
-                const thinkTime = ((Date.now() - state.thinkStartTime) / 1000).toFixed(1);
-                msg.metadata.thinkingContent = state.thinkingContent;
-                msg.metadata.thinkingTime = thinkTime + 's';
-            }
-
-            state.inThinkBlock = false;
-            state.thinkStartTime = null;
-            processed = afterThink;
-        } else if (state.inThinkBlock) {
-            state.thinkingContent += content;
-            msg.metadata.thinkingContent = state.thinkingContent;
-            if (state.thinkStartTime) {
-                const elapsed = ((Date.now() - state.thinkStartTime) / 1000).toFixed(1);
-                msg.metadata.thinkingTime = elapsed + 's';
-            }
-            processed = '';
-        } else {
-            state.fullContent += content;
-        }
-
-        msg.content = state.fullContent;
-        this.updateMessageContent(messageId, state.fullContent, state.thinkingContent, msg.metadata.thinkingTime);
-
-        return state;
-    },
-
-    stopGeneration() {
-        if (appState.abortController) {
-            appState.abortController.abort();
-            appState.abortController = null;
         }
     },
 
@@ -2771,7 +2513,7 @@ const app = {
 
         if (toolResults.length > 0) {
             const cleanContent = content.replace(/<tool_call>[\s\S]*?<\/tool_call>/g, '').trim();
-            appState.messages[messageId].content = cleanContent + '\n[Settings updated by AI: ' + toolResults.join(', ') + ']';
+            appState.messages[messageId].content = cleanContent + '\n\n[Settings updated by AI: ' + toolResults.join(', ') + ']';
             appState.messages[messageId].metadata.toolUsed = true;
             this.saveCurrentChat();
             this.render();
@@ -2896,15 +2638,7 @@ const app = {
         if (appState.isGenerating) {
             const typing = document.createElement('div');
             typing.className = 'typing';
-            typing.innerHTML = `
-                <div class="typing-indicator">
-                    <span>Generating</span>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                </div>
-                <button class="stop-btn" onclick="app.stopGeneration()">Stop</button>
-            `;
+            typing.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
             container.appendChild(typing);
         }
 
@@ -2930,16 +2664,20 @@ const app = {
             </div>
         `;
 
-        if (node.metadata?.thinkingContent || node.content?.includes('<think>')) {
-            html += this.renderThinkBlock(node);
+        if (node.metadata?.thinkingContent) {
+            html += `
+                <div class="thinking-block">
+                    <div class="thinking-label">
+                        <span>Thinking Process</span>
+                        <span>${node.metadata.thinkingTime || ''}</span>
+                    </div>
+                    ${this.escapeHtml(node.metadata.thinkingContent)}
+                </div>
+            `;
         }
 
-        let mainContent = node.content || '';
-        if (mainContent.includes('<think>')) {
-            mainContent = mainContent.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-        }
-
-        html += `<div class="message-content">${this.formatContent(mainContent)}</div>`;
+        let content = node.content || '';
+        html += `<div class="message-content">${this.formatContent(content)}</div>`;
 
         if (node.role === 'user' || node.role === 'assistant') {
             html += `
@@ -2957,81 +2695,21 @@ const app = {
         return div;
     },
 
-    renderThinkBlock(node) {
-        const thinkingContent = node.metadata?.thinkingContent || '';
-        const thinkingTime = node.metadata?.thinkingTime || '';
-        const isCollapsed = appState.settings.autoCollapseThink ? 'collapsed' : '';
-
-        if (!thinkingContent) return '';
-
-        return `
-            <div class="think-block ${isCollapsed}">
-                <div class="think-header">
-                    <div class="think-title">
-                        <span class="think-icon">🧠</span>
-                        <span>Thinking Process</span>
-                        ${thinkingTime ? `<span class="think-time">${thinkingTime}</span>` : ''}
-                    </div>
-                    <button class="think-toggle" onclick="event.stopPropagation(); this.closest('.think-block').classList.toggle('collapsed')">
-                        <span class="toggle-icon">▼</span>
-                    </button>
-                </div>
-                <div class="think-content">
-                    <pre>${this.escapeHtml(thinkingContent)}</pre>
-                </div>
-            </div>
-        `;
-    },
-
     updateMessageContent(id, content, thinking, time) {
         const el = document.getElementById(`msg-${id}`);
         if (el) {
-            let thinkBlock = el.querySelector('.think-block');
-            if (thinking) {
-                if (!thinkBlock) {
-                    const header = el.querySelector('.message-header');
-                    const thinkHTML = `
-                        <div class="think-block ${appState.settings.autoCollapseThink ? 'collapsed' : ''}">
-                            <div class="think-header">
-                                <div class="think-title">
-                                    <span class="think-icon">🧠</span>
-                                    <span>Thinking Process</span>
-                                    ${time ? `<span class="think-time">${time}</span>` : '<span class="think-time">thinking...</span>'}
-                                </div>
-                                <button class="think-toggle" onclick="event.stopPropagation(); this.closest('.think-block').classList.toggle('collapsed')">
-                                    <span class="toggle-icon">▼</span>
-                                </button>
-                            </div>
-                            <div class="think-content">
-                                <pre>${this.escapeHtml(thinking)}</pre>
-                            </div>
-                        </div>
-                    `;
-                    header.insertAdjacentHTML('afterend', thinkHTML);
-                } else {
-                    const pre = thinkBlock.querySelector('pre');
-                    if (pre) pre.textContent = thinking;
-                    const timeEl = thinkBlock.querySelector('.think-time');
-                    if (timeEl && time) timeEl.textContent = time;
-                }
-            }
-
             const contentEl = el.querySelector('.message-content');
             if (contentEl) {
-                let displayContent = content;
-                if (displayContent.includes('<think>')) {
-                    displayContent = displayContent.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-                }
-                contentEl.innerHTML = this.formatContent(displayContent);
+                contentEl.innerHTML = this.formatContent(content);
+            }
+            if (thinking && !el.querySelector('.thinking-block')) {
+                this.render();
             }
         }
     },
 
     formatContent(content) {
         if (!content) return '';
-
-        content = content.replace(/<\?think>/g, '');
-
         return this.escapeHtml(content)
             .replace(/\n/g, '<br>')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
