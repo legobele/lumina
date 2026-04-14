@@ -7,7 +7,9 @@ This was fully made using Kimi K2.5 Thinking via Moonshot AI's free usage tier (
 
 # CHECK RELEASES
 
-# Features as of v0.4
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA THIS HAS LIKE 3 BILLION BUGS but tbh idgaf its vibecoded lol
+
+# Features as of v0.4.1
 - Multiple chats, saved to localStorage.
 - **NEW (v0.4)** Context length customization
 - Streaming for outputs
@@ -19,6 +21,7 @@ This was fully made using Kimi K2.5 Thinking via Moonshot AI's free usage tier (
 
 # Issues
 - i fucked up and sent kimi the wrong version of the whole setup for v0.4. lol we're cooked ffs
+- sidebar alignment on v0.4.1
 - On v0.3.0, Kimi left a bunch of \n tags on this. Thanks, we hate it. It took THIRTY TOOL CALLS to get those off lol
 
 # Contributors (I think this is how this is handled?)
