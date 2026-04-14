@@ -1075,6 +1075,32 @@
         .message-content {
             animation: fadeInContent 0.15s ease;
         }
+
+        .regenerate-option {
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .regenerate-option:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--text-secondary);
+        }
+
+        .branch-indicator {
+            font-size: 11px;
+            background: var(--bg-tertiary);
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
 </style>
 <base target="_blank">
 </head>
@@ -1701,8 +1727,7 @@ const app = {
         if (d.personal) parts.push(`Personal context: ${d.personal}`);
         if (d.extra) parts.push(`Additional details: ${d.extra}`);
 
-        return parts.join("
-");
+        return parts.join("\n");
     },
 
     compilePreferences() {
@@ -1712,8 +1737,7 @@ const app = {
         if (d.responseStyle) parts.push(`Style: ${d.responseStyle}`);
         if (d.responseFormat) parts.push(`Format: ${d.responseFormat}`);
 
-        return parts.join("
-");
+        return parts.join("\n");
     },
 
     createNewChat() {
@@ -2482,9 +2506,7 @@ const app = {
             }
 
             if (buffer.trim()) {
-                const events = this.parseSSEEvents(buffer + '
-
-');
+                const events = this.parseSSEEvents(buffer + '\n');
                 for (const event of events.parsed) {
                     streamState = this.handleStreamEvent(event, assistantId, streamState);
                 }
@@ -2518,8 +2540,7 @@ const app = {
 
     parseSSEEvents(buffer) {
         const events = [];
-        const lines = buffer.split('
-');
+        const lines = buffer.split('\n');
         let currentEvent = { type: null, data: '' };
         let lineIndex = 0;
 
@@ -2536,14 +2557,12 @@ const app = {
                     currentEvent = { type: null, data: '' };
                 }
             } else if (line.trim() !== '') {
-                currentEvent.data += '
-' + line;
+                currentEvent.data += '\n' + line;
             }
             lineIndex = i;
         }
 
-        const remainder = lines.slice(lineIndex + 1).join('
-');
+        const remainder = lines.slice(lineIndex + 1).join('\n');
 
         const parsed = events.map(e => {
             try {
@@ -2647,76 +2666,38 @@ const app = {
         const systemBlocks = [];
 
         if (appState.settings.recallMemory && appState.memories.length > 0) {
-            systemBlocks.push(`<userMemory>
-${appState.memories.join('
-')}
-</userMemory>`);
+            systemBlocks.push(`<userMemory>\n${appState.memories.join('\n')}\n</userMemory>`);
         }
 
         const userDetails = this.compileUserDetails();
         if (userDetails) {
-            systemBlocks.push(`<userDetails>
-${userDetails}
-</userDetails>`);
+            systemBlocks.push(`<userDetails>\n${userDetails}\n</userDetails>`);
         }
 
         const preferences = this.compilePreferences();
         if (preferences) {
-            systemBlocks.push(`<userPreferences>
-${preferences}
-</userPreferences>`);
+            systemBlocks.push(`<userPreferences>\n${preferences}\n</userPreferences>`);
         }
 
         if (appState.settings.recallChats) {
             const summaries = this.getRelevantSummaries(messageId);
             if (summaries.length > 0) {
-                systemBlocks.push(`<prevChats>
-${summaries.join('
-
-')}
-</prevChats>`);
+                systemBlocks.push(`<prevChats>\n${summaries.join('\n\n')}\n</prevChats>`);
             }
         }
 
         if (systemBlocks.length > 0) {
-            systemContent = `<system>
-You are Lumina, a helpful AI assistant.
-
-${systemBlocks.join('
-
-')}
-</system>`;
+            systemContent = `<system>\nYou are Lumina, a helpful AI assistant.\n\n${systemBlocks.join('\n\n')}\n</system>`;
         } else {
-            systemContent = '<system>
-You are Lumina, a helpful AI assistant.
-</system>';
+            systemContent = '<system>\nYou are Lumina, a helpful AI assistant.\n</system>';
         }
 
-        systemContent += `
-
-<tools>
-You have access to tools to personalize the experience:
-
-1. manage_memory - Store/recall facts about the user
-2. update_user_details - Update user profile or preferences
-
-Format: <tool_call>{"name": "tool_name", "arguments": {...}}</tool_call>
-
-Fields: name, nickname, pronouns, work, personal, extra, responseStyle, responseFormat
-</tools>`;
+        systemContent += `\n\n<tools>\nYou have access to tools to personalize the experience:\n\n1. manage_memory - Store/recall facts about the user\n2. update_user_details - Update user profile or preferences\n\nFormat: <tool_call>{"name": "tool_name", "arguments": {...}}</tool_call>\n\nFields: name, nickname, pronouns, work, personal, extra, responseStyle, responseFormat\n</tools>`;
 
         if (options.mode === 'shorter') {
-            systemContent += '
-
-<instructions>
-Provide a concise, brief response.
-</instructions>';
+            systemContent += '\n\n<instructions>\nProvide a concise, brief response.\n</instructions>';
         } else if (options.mode === 'longer') {
-            systemContent += '
-
-<instructions>
-Provide a detailed, comprehensive response with examples and depth.
-</instructions>';
+            systemContent += '\n\n<instructions>\nProvide a detailed, comprehensive response with examples and depth.\n</instructions>';
         }
 
         messages.push({ role: 'system', content: systemContent });
@@ -2790,9 +2771,7 @@ Provide a detailed, comprehensive response with examples and depth.
 
         if (toolResults.length > 0) {
             const cleanContent = content.replace(/<tool_call>[\s\S]*?<\/tool_call>/g, '').trim();
-            appState.messages[messageId].content = cleanContent + '
-
-[Settings updated by AI: ' + toolResults.join(', ') + ']';
+            appState.messages[messageId].content = cleanContent + '\n[Settings updated by AI: ' + toolResults.join(', ') + ']';
             appState.messages[messageId].metadata.toolUsed = true;
             this.saveCurrentChat();
             this.render();
@@ -3054,8 +3033,7 @@ Provide a detailed, comprehensive response with examples and depth.
         content = content.replace(/<\?think>/g, '');
 
         return this.escapeHtml(content)
-            .replace(/
-/g, '<br>')
+            .replace(/\n/g, '<br>')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
             .replace(/`(.*?)`/g, '<code style="background: var(--bg-tertiary); padding: 2px 4px; border-radius: 4px;">$1</code>');
