@@ -1582,28 +1582,24 @@ const app = {
     },
 
     compileUserDetails() {
-        const d = appState.userDetails;
-        const parts = [];
+    const d = appState.userDetails;
+    const parts = [];
+    if (d.name) parts.push(`Name: ${d.name}`);
+    if (d.nickname) parts.push(`Preferred nickname: ${d.nickname}`);
+    if (d.pronouns) parts.push(`Pronouns: ${d.pronouns}`);
+    if (d.work) parts.push(`Occupation: ${d.work}`);
+    if (d.personal) parts.push(`Personal context: ${d.personal}`);
+    if (d.extra) parts.push(`Additional details: ${d.extra}`);
+    return parts.join('\n');  // MUST BE SINGLE LINE
+},
 
-        if (d.name) parts.push(`Name: ${d.name}`);
-        if (d.nickname) parts.push(`Preferred nickname: ${d.nickname}`);
-        if (d.pronouns) parts.push(`Pronouns: ${d.pronouns}`);
-        if (d.work) parts.push(`Occupation: ${d.work}`);
-        if (d.personal) parts.push(`Personal context: ${d.personal}`);
-        if (d.extra) parts.push(`Additional details: ${d.extra}`);
-
-        return parts.join('\n');
-    },
-
-    compilePreferences() {
-        const d = appState.userDetails;
-        const parts = [];
-
-        if (d.responseStyle) parts.push(`Style: ${d.responseStyle}`);
-        if (d.responseFormat) parts.push(`Format: ${d.responseFormat}`);
-
-        return parts.join('\n');
-    },
+compilePreferences() {
+    const d = appState.userDetails;
+    const parts = [];
+    if (d.responseStyle) parts.push(`Style: ${d.responseStyle}`);
+    if (d.responseFormat) parts.push(`Format: ${d.responseFormat}`);
+    return parts.join('\n');  // MUST BE SINGLE LINE
+},
 
     createNewChat() {
         const chatId = Date.now().toString(36);
