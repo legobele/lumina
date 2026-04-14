@@ -86,6 +86,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
         }
 
         .header-btn:active {
@@ -797,29 +798,37 @@
             color: var(--hf-orange);
         }
 
-        /* Chat History Styles */
+        /* Chat History Styles - FIXED ALIGNMENT */
         .chat-history-btn {
             position: relative;
+            display: inline-flex;
         }
 
         .chat-history-dropdown {
             position: absolute;
-            top: 100%;
-            right: 0;
+            top: calc(100% + 8px);
+            left: 0;
+            right: auto;
             background: var(--bg-secondary);
             border: 1px solid var(--border);
             border-radius: 12px;
             min-width: 280px;
             max-height: 400px;
             overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            z-index: 1001;
             display: none;
-            margin-top: 8px;
+            margin-top: 0;
         }
 
         .chat-history-dropdown.active {
             display: block;
+            animation: fadeInDropdown 0.2s ease;
+        }
+
+        @keyframes fadeInDropdown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .chat-history-item {
@@ -829,6 +838,16 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: background 0.2s;
+        }
+
+        .chat-history-item:first-child {
+            border-radius: 12px 12px 0 0;
+        }
+
+        .chat-history-item:last-child {
+            border-radius: 0 0 12px 12px;
+            border-bottom: none;
         }
 
         .chat-history-item:hover {
@@ -837,13 +856,14 @@
 
         .chat-history-item.active {
             background: var(--bg-tertiary);
-            border-left: 2px solid var(--text-primary);
+            border-left: 3px solid var(--text-primary);
         }
 
         .chat-history-title {
             font-weight: 500;
             font-size: 14px;
             margin-bottom: 2px;
+            color: var(--text-primary);
         }
 
         .chat-history-meta {
@@ -859,6 +879,7 @@
             color: var(--error);
             cursor: pointer;
             padding: 4px;
+            font-size: 18px;
         }
 
         .chat-history-item:hover .chat-history-delete {
@@ -871,12 +892,21 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            background: var(--bg-secondary);
+            z-index: 10;
         }
 
         .chat-history-new {
             font-size: 12px;
             color: var(--success);
             cursor: pointer;
+            font-weight: 600;
+        }
+
+        .chat-history-new:hover {
+            text-decoration: underline;
         }
 
         .system-block {
@@ -995,7 +1025,7 @@
 
             <div class="input-area">
                 <div class="input-toolbar" id="inputToolbar">
-                    <button class="toolbar-btn" id="modelSelectBtn" onclick="app.showModelSelector()">
+                    <button class="toolbar-btn" id="modelSelectBtn" onclick="app.handleModelSelectorClick()">
                         <span>🤖</span>
                         <span id="currentModelLabel">Select Model</span>
                     </button>
@@ -1435,6 +1465,7 @@ const app = {
             }
         });
 
+        // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
             const dropdown = document.getElementById('chatHistoryDropdown');
             const btn = document.querySelector('.chat-history-btn');
@@ -1979,6 +2010,31 @@ const app = {
         if (display && appState.currentModel) {
             const defaultCtx = this.getModelDefaultContext(appState.currentModel);
             display.textContent = `Model default: ${(defaultCtx / 1024).toFixed(0)}k tokens`;
+        }
+    },
+
+    // FIXED: Handle model selector click - fetches models if needed first
+    async handleModelSelectorClick() {
+        if (appState.models.length === 0) {
+            // If no models loaded, try fetching first
+            const statusText = document.getElementById('statusText');
+            const originalText = statusText.textContent;
+            statusText.textContent = 'Fetching models...';
+            
+            try {
+                await this.fetchModels();
+                if (appState.models.length > 0) {
+                    this.showModelSelector();
+                } else {
+                    this.showNotification('No models found. Check LM Studio connection.', 'error');
+                }
+            } catch (error) {
+                this.showNotification('Failed to fetch models', 'error');
+            } finally {
+                statusText.textContent = originalText;
+            }
+        } else {
+            this.showModelSelector();
         }
     },
 
