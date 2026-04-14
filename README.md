@@ -5,7 +5,7 @@ This is a **beta project**. Because of that it will probably be very buggy.
 
 This was fully made using Kimi K2.5 Thinking via Moonshot AI's free usage tier (https://www.kimi.com/).
 
-# CHECK RELEASES
+# CHECK RELEASES (1 version behind)
 
 # AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA THIS HAS LIKE 3 BILLION BUGS but tbh idgaf its vibecoded lol
 
