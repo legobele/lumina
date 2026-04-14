@@ -1760,54 +1760,80 @@ compilePreferences() {
     },
 
     async fetchModels() {
-        const refreshBtn = document.getElementById('refreshModelsBtn');
-        const modalRefreshBtn = document.getElementById('modalRefreshBtn');
-        const statusDot = document.getElementById('statusDot');
-        const statusText = document.getElementById('statusText');
+    const refreshBtn = document.getElementById('refreshModelsBtn');
+    const modalRefreshBtn = document.getElementById('modalRefreshBtn');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
 
-        if (refreshBtn) refreshBtn.classList.add('spinning');
-        if (modalRefreshBtn) modalRefreshBtn.classList.add('spinning');
-        statusDot.className = 'status-dot checking';
-        statusText.textContent = 'Connecting...';
+    if (refreshBtn) refreshBtn.classList.add('spinning');
+    if (modalRefreshBtn) modalRefreshBtn.classList.add('spinning');
+    statusDot.className = 'status-dot checking';
+    statusText.textContent = 'Connecting...';
 
-        try {
-            // Use v0 API for richer data including capabilities
-            const response = await fetch(`${appState.settings.lmStudioIp}/api/v0/models`, {
-                headers: appState.settings.useApiKey ? { 'Authorization': `Bearer ${appState.settings.apiKey}` } : {}
-            });
+    try {
+        // Add cache-busting to prevent 304 issues
+        const cacheBuster = `?t=${Date.now()}`;
+        const response = await fetch(`${appState.settings.lmStudioIp}/api/v0/models${cacheBuster}`, {
+            headers: {
+                'Accept': 'application/json',
+                ...(appState.settings.useApiKey && { 'Authorization': `Bearer ${appState.settings.apiKey}` })
+            },
+            // Ensure we don't get cached responses that cause 304 empty bodies
+            cache: 'no-store'
+        });
 
-            if (!response.ok) throw new Error('Failed to fetch');
-
-            const data = await response.json();
-            appState.models = data.data || [];
-
-            // Detect capabilities from LM Studio API
-            await this.detectCapabilities();
-
-            // If HF fetch enabled, also fetch HuggingFace data
-            if (appState.settings.hfFetch && !appState.hfFetching) {
-                this.fetchHuggingFaceData();
+        // Handle 304 specifically - treat as success but body might be empty
+        if (response.status === 304 || !response.ok) {
+            if (!response.ok && response.status !== 304) {
+                throw new Error(`HTTP ${response.status}`);
             }
-
-            statusDot.className = 'status-dot connected';
-            statusText.textContent = `${appState.models.length} models`;
-
-            this.updateDefaultContextDisplay();
-
-            if (!appState.currentModel && appState.models.length > 0 && appState.currentPath.length === 0) {
-                this.showModelSelector();
-            }
-
-        } catch (error) {
-            console.error('Failed to fetch models:', error);
-            statusDot.className = 'status-dot';
-            statusText.textContent = 'Disconnected';
-            appState.models = [];
-        } finally {
-            if (refreshBtn) refreshBtn.classList.remove('spinning');
-            if (modalRefreshBtn) modalRefreshBtn.classList.remove('spinning');
         }
-    },
+
+        // Safely parse JSON - handle empty body
+        const text = await response.text();
+        if (!text || text.trim() === '') {
+            throw new Error('Empty response from server');
+        }
+
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            throw new Error('Invalid JSON response');
+        }
+
+        appState.models = data.data || [];
+
+        if (appState.models.length === 0) {
+            throw new Error('No models returned from LM Studio');
+        }
+
+        await this.detectCapabilities();
+
+        if (appState.settings.hfFetch && !appState.hfFetching) {
+            this.fetchHuggingFaceData();
+        }
+
+        statusDot.className = 'status-dot connected';
+        statusText.textContent = `${appState.models.length} models`;
+
+        this.updateDefaultContextDisplay();
+
+        if (!appState.currentModel && appState.models.length > 0 && appState.currentPath.length === 0) {
+            this.showModelSelector();
+        }
+
+    } catch (error) {
+        console.error('Failed to fetch models:', error);
+        statusDot.className = 'status-dot';
+        statusText.textContent = 'Disconnected';
+        this.showNotification(`Failed to load models: ${error.message}`, 'error');
+        appState.models = [];
+    } finally {
+        if (refreshBtn) refreshBtn.classList.remove('spinning');
+        if (modalRefreshBtn) modalRefreshBtn.classList.remove('spinning');
+    }
+},
 
     async detectCapabilities() {
         for (const model of appState.models) {
