@@ -2037,28 +2037,37 @@ compilePreferences() {
 
     // FIXED: Handle model selector click - fetches models if needed first
     async handleModelSelectorClick() {
-        if (appState.models.length === 0) {
-            // If no models loaded, try fetching first
-            const statusText = document.getElementById('statusText');
-            const originalText = statusText.textContent;
-            statusText.textContent = 'Fetching models...';
-            
-            try {
-                await this.fetchModels();
-                if (appState.models.length > 0) {
-                    this.showModelSelector();
-                } else {
-                    this.showNotification('No models found. Check LM Studio connection.', 'error');
-                }
-            } catch (error) {
-                this.showNotification('Failed to fetch models', 'error');
-            } finally {
-                statusText.textContent = originalText;
+    if (appState.models.length === 0) {
+        // If no models loaded, try fetching first
+        const statusText = document.getElementById('statusText');
+        const originalText = statusText ? statusText.textContent : 'Disconnected';
+        if (statusText) statusText.textContent = 'Fetching models...';
+        
+        try {
+            await this.fetchModels();
+            if (appState.models.length > 0) {
+                this.showModelSelector();
+            } else {
+                this.showNotification('No models found. Check LM Studio connection.', 'error');
             }
-        } else {
-            this.showModelSelector();
+        } catch (error) {
+            this.showNotification('Failed to fetch models', 'error');
+        } finally {
+            if (statusText) statusText.textContent = originalText;
         }
-    },
+    } else {
+        // FIX: Added try-catch here to handle any errors when reopening the selector
+        try {
+            this.showModelSelector();
+        } catch (error) {
+            console.error('Error showing model selector:', error);
+            this.showNotification('Error opening model selector: ' + error.message, 'error');
+            // If there's an error, try refreshing the model list
+            appState.models = [];
+            this.handleModelSelectorClick();
+        }
+    }
+},
 
     showModelSelector() {
         this.renderModelList();
@@ -2066,49 +2075,55 @@ compilePreferences() {
     },
 
     renderModelList() {
-        const list = document.getElementById('modelList');
+    const list = document.getElementById('modelList');
+    if (!list) return;
 
-        if (appState.models.length === 0) {
-            list.innerHTML = `
-                <div class="empty-state" style="padding: 40px;">
-                    <div style="font-size: 24px; margin-bottom: 8px;">⚠</div>
-                    <div>No models found</div>
-                    <div style="font-size: 13px; margin-top: 8px; margin-bottom: 16px;">Check LM Studio IP in settings</div>
-                    <button class="btn btn-secondary" onclick="app.showSettings()">Open Settings</button>
-                </div>
-            `;
-            return;
-        }
+    if (!appState.models || appState.models.length === 0) {
+        list.innerHTML = `
+            <div class="empty-state" style="padding: 40px;">
+                <div style="font-size: 24px; margin-bottom: 8px;">⚠</div>
+                <div>No models found</div>
+                <div style="font-size: 13px; margin-top: 8px; margin-bottom: 16px;">Check LM Studio IP in settings</div>
+                <button class="btn btn-secondary" onclick="app.showSettings()">Open Settings</button>
+            </div>
+        `;
+        return;
+    }
 
-        list.innerHTML = appState.models.map(model => {
-            const caps = appState.modelCapabilities.get(model.id) || {};
-            const isSelected = appState.currentModel === model.id;
-            const hfData = appState.hfModelData.get(model.id);
+    list.innerHTML = appState.models.map(model => {
+        // FIX: Handle missing model.id gracefully
+        if (!model || !model.id) return '';
+        
+        const caps = appState.modelCapabilities.get(model.id) || {};
+        const isSelected = appState.currentModel === model.id;
+        const hfData = appState.hfModelData.get(model.id);
+        // FIX: Escape quotes in model.id to prevent breaking the onclick handler
+        const escapedId = model.id.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-            return `
-                <div class="model-option ${isSelected ? 'selected' : ''}" onclick="app.selectModel('${model.id}')">
-                    <div style="flex: 1;">
-                        <div class="model-name">
-                            ${model.id}
-                            ${caps.hfVerified ? '<span class="hf-indicator">🤗 HF</span>' : ''}
-                        </div>
-                        <div class="model-meta">
-                            <span>${(caps.contextLength / 1024).toFixed(0)}k context</span>
-                            ${caps.thinking ? '<span class="capability-badge thinking">Thinking</span>' : ''}
-                            ${caps.vision ? '<span class="capability-badge vision">Vision</span>' : ''}
-                            ${caps.hfVerified ? '<span class="capability-badge hf-verified">HF Verified</span>' : ''}
-                        </div>
-                        ${hfData?.thinkingKeywords?.length ? `
-                            <div style="font-size: 11px; color: var(--hf-orange); margin-top: 4px;">
-                                Keywords: ${hfData.thinkingKeywords.slice(0, 3).join(', ')}
-                            </div>
-                        ` : ''}
+        return `
+            <div class="model-option ${isSelected ? 'selected' : ''}" onclick="app.selectModel('${escapedId}')">
+                <div style="flex: 1;">
+                    <div class="model-name">
+                        ${model.id}
+                        ${caps.hfVerified ? '<span class="hf-indicator">🤗 HF</span>' : ''}
                     </div>
-                    ${isSelected ? '<span>✓</span>' : ''}
+                    <div class="model-meta">
+                        <span>${((caps.contextLength || 4096) / 1024).toFixed(0)}k context</span>
+                        ${caps.thinking ? '<span class="capability-badge thinking">Thinking</span>' : ''}
+                        ${caps.vision ? '<span class="capability-badge vision">Vision</span>' : ''}
+                        ${caps.hfVerified ? '<span class="capability-badge hf-verified">HF Verified</span>' : ''}
+                    </div>
+                    ${hfData?.thinkingKeywords?.length ? `
+                        <div style="font-size: 11px; color: var(--hf-orange); margin-top: 4px;">
+                            Keywords: ${hfData.thinkingKeywords.slice(0, 3).join(', ')}
+                        </div>
+                    ` : ''}
                 </div>
-            `;
-        }).join('');
-    },
+                ${isSelected ? '<span>✓</span>' : ''}
+            </div>
+        `;
+    }).join('');
+},
 
     selectModel(modelId) {
         appState.currentModel = modelId;
